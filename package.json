@@ -1,0 +1,18 @@
+{
+  "name": "@nexlabs/zeus",
+  "version": "0.0.0-bootstrap",
+  "private": true,
+  "description": "Next Labs Zeus bootstrap workspace",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@gef-bootstrap/cli": "1.1.2"
+  },
+  "scripts": {
+    "gef:version": "gef --version",
+    "gef:plan": "gef init --target . --json",
+    "gef:doctor": "gef doctor --target . --json",
+    "gef:status": "gef status --target . --json"
+  }
+}
