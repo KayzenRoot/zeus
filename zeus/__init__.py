@@ -1,2 +1,2 @@
-"""Zeus: an open, Jev-compatible System One decision server on DiffusionGemma."""
+"""Zeus: Next Labs System One decision server with typed, calibrated outputs."""
 __version__ = "0.1.0"

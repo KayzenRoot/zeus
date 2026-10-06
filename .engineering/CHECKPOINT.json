@@ -7,28 +7,34 @@
     "status": "VERIFIED",
     "runId": "run-1-7f8f681f696b"
   },
-  "upstream": {
-    "repository": "razorback16/openjev",
-    "commit": "75f22b6dad8c360fdba0e0ebd3dc0a1187628f60",
+  "importedBaseline": {
+    "status": "VERIFIED",
     "blobCount": 31,
     "matchedBlobs": 31,
     "mismatches": 0,
-    "status": "VERIFIED"
+    "license": "Apache-2.0"
   },
   "sourcePack": {
     "status": "ESTABLISHED",
     "workOrder": "ZEUS-GOV-WO-001"
   },
-  "decisions": [
-    "ZD-0001",
-    "ZD-0002",
-    "ZD-0003",
-    "ZD-0004",
-    "ZD-0005"
-  ],
+  "activeWorkOrder": {
+    "id": "ZEUS-ID-WO-001",
+    "status": "EXECUTED_PENDING_AUDIT"
+  },
+  "identity": {
+    "product": "Zeus",
+    "version": "0.1.0",
+    "pythonPackage": "zeus",
+    "environmentPrefix": "ZEUS_",
+    "dockerService": "zeus",
+    "modelIds": [
+      "zeus-latest",
+      "zeus-0.1"
+    ]
+  },
   "repositoryVisibility": "PUBLIC_AUTHORIZED_TEMPORARILY_FOR_CI",
   "secretsPolicy": "FORBIDDEN_IN_REPOSITORY",
-  "implementation": "NOT_STARTED",
-  "nextLegalAction": "ZEUS-ID-WO-001",
-  "stopCondition": "IDENTITY_ONLY_NO_FEATURE_EXPANSION"
+  "nextLegalAction": "EXACT_HEAD_TESTS_EVIDENCE_AUDIT",
+  "stopCondition": "NO_PROVIDER_ROUTING_OR_OPTIMIZATION_BEFORE_IDENTITY_APPROVAL"
 }

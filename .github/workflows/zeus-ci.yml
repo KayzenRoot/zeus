@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git grep -n -i -E 'openjev|OPENJEV' --             ':!/.engineering/upstream/**'             ':!/.engineering/evidence/ZEUS-BOOT-WO-001-EVIDENCE.md'             ':!/.engineering/work-orders/ZEUS-BOOT-WO-001.md'             ':!/.engineering/context-locks/ZEUS-BOOT-WO-001.json'             ':!/.engineering/work-orders/ZEUS-ID-WO-001.md'             ':!/.engineering/context-locks/ZEUS-ID-WO-001.json'             ':!/.engineering/evidence/ZEUS-ID-WO-001-EVIDENCE.md'; then
+          if git grep -n -i -E 'open[j]ev' --             ':!/.engineering/upstream/**'             ':!/.engineering/evidence/**'             ':!/.engineering/work-orders/**'             ':!/.engineering/context-locks/**'; then
             echo "Active legacy identity reference detected."
             exit 1
           fi
