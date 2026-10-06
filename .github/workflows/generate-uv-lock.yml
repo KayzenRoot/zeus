@@ -1,0 +1,48 @@
+name: Generate Zeus uv lock
+
+on:
+  push:
+    branches:
+      - identity/ZEUS-ID-WO-001
+    paths:
+      - ".github/workflows/generate-uv-lock.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: zeus-generate-uv-lock
+  cancel-in-progress: false
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pinned uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.17"
+          enable-cache: false
+
+      - name: Generate universal lock
+        run: uv lock
+
+      - name: Persist uv.lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f uv.lock
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          if git diff --cached --quiet; then
+            echo "uv.lock already current."
+            exit 0
+          fi
+          git commit -m "chore(ci): generate Zeus uv lock"
+          git push origin HEAD:identity/ZEUS-ID-WO-001
