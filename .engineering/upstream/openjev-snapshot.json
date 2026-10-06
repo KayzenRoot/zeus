@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "zeus.upstream.snapshot",
+  "source": {
+    "repository": "razorback16/openjev",
+    "url": "https://github.com/razorback16/openjev",
+    "ref": "main",
+    "commit": "75f22b6dad8c360fdba0e0ebd3dc0a1187628f60",
+    "releaseVersion": "0.6.0",
+    "license": "Apache-2.0"
+  },
+  "importedAtUtc": "2026-10-06",
+  "importMode": "tracked-files-byte-for-byte",
+  "blobCount": 31,
+  "blobs": [
+    {
+      "path": ".dockerignore",
+      "mode": "100644",
+      "sha": "829ed699ae612456d715534757712205abbd7301"
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "sha": "de00f8e3576991bcf6ba2b450d58ae135aa32602"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "mode": "100644",
+      "sha": "0e68ceee9254899d329a3a140c79ded497eb1f0d"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "sha": "d645695673349e3947e8e5ae42332d0ac3164cd7"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "sha": "7a9537e3f36abc219b4ff7ccbc816505a05573eb"
+    },
+    {
+      "path": "docker-compose.yml",
+      "mode": "100644",
+      "sha": "991f5c75f654cc8ba8d3c249a855e27d53cee217"
+    },
+    {
+      "path": "docker/Dockerfile",
+      "mode": "100644",
+      "sha": "de65892afa1c4afa1e7dbc98b1bdccd45a85b099"
+    },
+    {
+      "path": "docker/Dockerfile.base",
+      "mode": "100644",
+      "sha": "04bc5613fd53e30a691782ebb8c00f63b59bb2d4"
+    },
+    {
+      "path": "docker/Dockerfile.clm",
+      "mode": "100644",
+      "sha": "45129a3b111b5694c7d448fc6c9b38021ac33911"
+    },
+    {
+      "path": "docker/Dockerfile.jevk5",
+      "mode": "100644",
+      "sha": "2f77fbd2c473f9aab7b433b21c98af3c29f4da7f"
+    },
+    {
+      "path": "docker/Dockerfile.laya",
+      "mode": "100644",
+      "sha": "dfd996e624b13bfb84bd67c0847383bc6b1dd6e5"
+    },
+    {
+      "path": "docker/Dockerfile.verdict",
+      "mode": "100644",
+      "sha": "09645d5c10a2d3c54801a0e583541843adb30626"
+    },
+    {
+      "path": "docker/entrypoint.sh",
+      "mode": "100755",
+      "sha": "7a15e0b6235688d5cc89c152697b939f797d7beb"
+    },
+    {
+      "path": "docker/patches/vision_prefix_lm.py",
+      "mode": "100644",
+      "sha": "9d0525ba58a95d90ec2658f700f8b2a9e1714203"
+    },
+    {
+      "path": "openjev/__init__.py",
+      "mode": "100644",
+      "sha": "cd6af7bc109ebdf75f11f28249f5061a9a1884e2"
+    },
+    {
+      "path": "openjev/__main__.py",
+      "mode": "100644",
+      "sha": "cfe2f65456e8c9ed64bb7c657d8eea8b76f019b9"
+    },
+    {
+      "path": "openjev/api.py",
+      "mode": "100644",
+      "sha": "7826c2fb1f5f35e7a4a703eae81454e9bd690193"
+    },
+    {
+      "path": "openjev/chat.py",
+      "mode": "100644",
+      "sha": "47c096949b62caf3cac76b152a95a0bbc8b09ef3"
+    },
+    {
+      "path": "openjev/config.py",
+      "mode": "100644",
+      "sha": "c95efa68761fb07b5a1dcd94cb7f2a46d8c0462f"
+    },
+    {
+      "path": "openjev/encoders.py",
+      "mode": "100644",
+      "sha": "e338f06edc9622dd39d72ab7504f43f44b7fba56"
+    },
+    {
+      "path": "openjev/engine.py",
+      "mode": "100644",
+      "sha": "33881554b420aa13378c71a5fb328798da992574"
+    },
+    {
+      "path": "openjev/mlx_backend.py",
+      "mode": "100644",
+      "sha": "f01ae676838015cd6ad4e6967ca6574b64197907"
+    },
+    {
+      "path": "openjev/warmup.py",
+      "mode": "100644",
+      "sha": "7f52c7fc32d260da895e6b7aec3655237e8e33b1"
+    },
+    {
+      "path": "pyproject.toml",
+      "mode": "100644",
+      "sha": "68a941a1448914413d16c3283ac6eefae816bb19"
+    },
+    {
+      "path": "scripts/bench.py",
+      "mode": "100644",
+      "sha": "98d91f00b926be7cd92798325fc50f8ba680fb11"
+    },
+    {
+      "path": "tests/data/hotdog.jpg",
+      "mode": "100644",
+      "sha": "2aa8728f4bde14e5718b1d0fc7fa5b61a260d1c2"
+    },
+    {
+      "path": "tests/test_api.py",
+      "mode": "100644",
+      "sha": "41b16c8736b021c08c31a352eb7eb6afbb619826"
+    },
+    {
+      "path": "tests/test_encoders.py",
+      "mode": "100644",
+      "sha": "41ca4f70f452d9d6d5ead6215bea1a66b54c857e"
+    },
+    {
+      "path": "tests/test_live.py",
+      "mode": "100644",
+      "sha": "3ef9e7619d0b00e6d19cec66735e9e23a7e4e33d"
+    },
+    {
+      "path": "tests/test_mlx_backend.py",
+      "mode": "100644",
+      "sha": "d1bc1b5efcb98cae4170598e52b03e14a1b56291"
+    },
+    {
+      "path": "tests/test_mlx_model.py",
+      "mode": "100644",
+      "sha": "2918a4cf609ebc3be68581f8a56003f140675b05"
+    }
+  ]
+}
