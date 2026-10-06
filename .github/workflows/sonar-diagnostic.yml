@@ -1,0 +1,45 @@
+name: Sonar diagnostic
+
+on:
+  push:
+    branches:
+      - identity/ZEUS-ID-WO-001
+    paths:
+      - ".github/workflows/sonar-diagnostic.yml"
+
+jobs:
+  inspect:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read public Sonar issues
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location             'https://sonarcloud.io/api/issues/search?componentKeys=KayzenRoot_zeus&pullRequest=7&issueStatuses=OPEN%2CCONFIRMED&types=VULNERABILITY&ps=100'             -o /tmp/issues.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open("/tmp/issues.json", encoding="utf-8"))
+          print("TOTAL", data.get("total"))
+          for issue in data.get("issues", []):
+              print(json.dumps({
+                  "key": issue.get("key"),
+                  "rule": issue.get("rule"),
+                  "severity": issue.get("severity"),
+                  "component": issue.get("component"),
+                  "line": issue.get("line"),
+                  "message": issue.get("message"),
+                  "status": issue.get("status"),
+                  "type": issue.get("type"),
+                  "impacts": issue.get("impacts"),
+              }, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Read public Quality Gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location             'https://sonarcloud.io/api/qualitygates/project_status?projectKey=KayzenRoot_zeus&pullRequest=7'             -o /tmp/gate.json
+          python3 -m json.tool /tmp/gate.json
