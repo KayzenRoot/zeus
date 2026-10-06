@@ -1,0 +1,68 @@
+name: Zeus CI
+
+on:
+  push:
+    branches:
+      - main
+      - identity/ZEUS-ID-WO-001
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.17"
+          enable-cache: false
+
+      - name: Install locked wheel-only CI dependencies
+        run: uv sync --locked --extra test --no-build --no-install-project --no-cache
+
+      - name: Package metadata and import smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv run --no-build --no-sync python - <<'PY'
+          import tomllib
+          import zeus
+          data = tomllib.load(open("pyproject.toml", "rb"))
+          assert data["project"]["name"] == "zeus"
+          assert data["project"]["version"] == "0.1.0"
+          assert data["tool"]["setuptools"]["packages"] == ["zeus"]
+          assert zeus.__version__ == "0.1.0", zeus.__version__
+          print("Zeus", zeus.__version__)
+          PY
+          uv run --no-build --no-sync python -m compileall -q zeus
+
+      - name: Unit and API tests
+        run: uv run --no-build --no-sync python -m pytest -q
+
+      - name: Docker Compose config
+        run: docker compose config >/dev/null
+
+      - name: Active legacy identity scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -n -i -E 'open[j]ev' --             ':!/.engineering/upstream/**'             ':!/.engineering/evidence/**'             ':!/.engineering/work-orders/**'             ':!/.engineering/context-locks/**'             ':!/.engineering/corrections/**'; then
+            echo "Active legacy identity reference detected."
+            exit 1
+          fi
+
+      - name: Secret-pattern guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! git grep -n -E '(sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|Bearer[[:space:]]+[A-Za-z0-9._-]{20,})' -- ':!/.git/**'

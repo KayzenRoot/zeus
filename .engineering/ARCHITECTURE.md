@@ -1,7 +1,7 @@
 # Zeus Architecture
 
 ## Current baseline
-Zeus currently preserves the imported decision-server architecture:
+Zeus preserves the imported decision-server architecture:
 - FastAPI HTTP service;
 - structured System One decisions;
 - diffusion/encoder backends;
@@ -10,13 +10,13 @@ Zeus currently preserves the imported decision-server architecture:
 - Python test suite.
 
 ## Identity boundary
-The active implementation namespace after the rebrand is `zeus`. All internal imports, package metadata, entry points, runtime module commands and service identity must resolve through Zeus naming.
+The active implementation namespace is `zeus`. Internal imports, package metadata, entry points, runtime module commands, environment variables, project-owned model IDs and service identity resolve through Zeus naming.
 
 ## Compatibility boundary
-The current rebrand is semantic-no-op. API request/response behavior, decision semantics and model algorithms are not intentionally changed.
+Identity-facing identifiers are allowed to change under ZEUS-ID-WO-001. HTTP endpoint paths, typed request/response structures, probability/confidence calculations, backend algorithms and decision semantics must remain equivalent.
 
 ## Provenance boundary
 Third-party provenance is isolated into legal/audit material and does not define current product identity.
 
 ## Change rule
-Any provider routing, cost engine, MCP server, model selection logic or algorithmic optimization requires a new Work Order.
+Provider routing, cost engines, MCP, model-selection policy and algorithmic optimization require separate Work Orders.

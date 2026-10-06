@@ -1,4 +1,4 @@
-"""Warm vLLM before the API opens: python -m openjev.warmup
+"""Warm vLLM before the API opens: python -m zeus.warmup
 
 vLLM compiles DiffusionGemma's sampler step per shape the first time it sees
 one (batch of one or many, narrow or full-width tile, one step or several),
@@ -18,7 +18,7 @@ from .chat import Generator
 from .config import Settings
 from .engine import Engine
 
-log = logging.getLogger("openjev.warmup")
+log = logging.getLogger("zeus.warmup")
 
 STATE = "Checkout has been down for every customer since 9:02 and we are losing orders."
 
@@ -106,9 +106,9 @@ async def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="openjev: %(message)s")
+    logging.basicConfig(level=logging.INFO, format="zeus: %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    if os.environ.get("OPENJEV_WARMUP", "1") == "0":
+    if os.environ.get("ZEUS_WARMUP", "1") == "0":
         sys.exit(0)
     try:
         asyncio.run(main())

@@ -1,6 +1,6 @@
 """Small System One models: Laya, Verdict, CLM and JevK5, one per container.
 
-Selected with OPENJEV_BACKEND=laya, verdict, clm or jevk5. Laya and Verdict read the
+Selected with ZEUS_BACKEND=laya, verdict, clm or jevk5. Laya and Verdict read the
 questions of a request in batched forward passes of a bidirectional encoder and
 a classification head, one sequence per question; CLM scores each option against
 the state with contrastive heads; JevK5 reads its answer letters' logits. Either way an
@@ -15,7 +15,7 @@ the answer shapes are shared with the vLLM backend; only the read differs.
   Apache-2.0). The prompt format and the per-option-count temperatures follow
   core/formatting.py and core/engine_encoder.py of
   github.com/Heman10x-NGU/Verdict-open-jev (v1.4 inference). That package is
-  not installed: it ships top-level `openjev` and `core` packages.
+  not installed: it ships top-level `zeus` and `core` packages.
 - clm-v0.1: CLM by Contrastive-LM (github.com/Contrastive-LM/CLM, Apache-2.0),
   checkpoint Contrastive-LM/CLM-v0.1-8B: a state head and an action head (MLPs
   to 512-d) over the last-token embeddings of a frozen Qwen3-8B. The embeddings
@@ -44,7 +44,7 @@ import httpx
 
 from .engine import Overloaded, SchemaError, Upstream, model_ns, text_of, to_answer
 
-log = logging.getLogger("openjev")
+log = logging.getLogger("zeus")
 
 
 WARMUP_QUESTIONS = {"c": {"type": "choice", "instructions": "x", "criteria": {"a": None, "b": None}},
@@ -63,7 +63,7 @@ class EncoderEngine:
     def __init__(self, settings):
         self.s = settings
         self.waiting = 0
-        self.pool = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix=f"openjev-{self.model_name}")
+        self.pool = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix=f"zeus-{self.model_name}")
         self.pool.submit(self.load).result()
         if self.s.warmup:
             # the first read compiles Triton launchers (about a second); do it before /health is up
@@ -79,7 +79,7 @@ class EncoderEngine:
     def read(self, state, qs):
         """[probabilities per question, in the caller's option order], input tokens.
         Runs on the model's thread. Questions are read in batches of at most
-        OPENJEV_ENCODER_BATCH, because every question is a full-length sequence
+        ZEUS_ENCODER_BATCH, because every question is a full-length sequence
         and a shared GPU has little room: Laya moves itself to the CPU for good
         after one CUDA out-of-memory error."""
         n = self.s.encoder_batch
@@ -362,7 +362,7 @@ class JevK5Engine(EncoderEngine):
         # As for CLM, the model is the vLLM server. The questions of one request are read at
         # once, on a second pool, so its reading threads never wait on each other.
         self.workers = settings.jevk5_workers
-        self.fanout = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="openjev-jevk5-read")
+        self.fanout = ThreadPoolExecutor(max_workers=self.workers, thread_name_prefix="zeus-jevk5-read")
         super().__init__(settings)
 
     async def close(self):

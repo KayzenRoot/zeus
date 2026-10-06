@@ -1,6 +1,6 @@
 """Structured reads on Apple silicon: DiffusionGemma in-process through MLX.
 
-Selected with OPENJEV_BACKEND=mlx. The read (prefill, one decoder pass, no
+Selected with ZEUS_BACKEND=mlx. The read (prefill, one decoder pass, no
 self-conditioning, temperature-1 log-softmax per slot) matches what vLLM's
 read-only step reports. mlx, mlx_vlm and PIL are imported lazily so the vLLM
 path never needs them.
@@ -78,7 +78,7 @@ class MlxRuntime:
     event loop and on a single thread, from loading on."""
 
     def __init__(self, model_path):
-        self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="openjev-mlx")
+        self.pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="zeus-mlx")
         self.init_prefill_cache()
         self.pool.submit(self._load, model_path).result()
 
@@ -158,7 +158,7 @@ class MlxRuntime:
             self.prefills[key] = (cache, n)
             self.prefill_tokens += n
             # No entry is exempt. The previous rule kept one whatever its size,
-            # so a single prompt at OPENJEV_MLX_MAX_PROMPT sat permanently at
+            # so a single prompt at ZEUS_MLX_MAX_PROMPT sat permanently at
             # twice the token budget, and neither 0 nor 1 could turn the cache
             # off. Evicting the entry just inserted is safe: `cache` is already
             # bound and is returned to the caller.

@@ -1,10 +1,10 @@
 # CLM (clm-v0.1): vLLM serves Qwen3-8B as a last-token embedder on 127.0.0.1:8000, and the
 # API server scores options with CLM's projection heads on the same GPU. Build docker/Dockerfile.base first.
-#   docker build -f docker/Dockerfile.clm -t razorback16/openjev-clm .
+#   docker build -f docker/Dockerfile.clm -t zeus-clm .
 #
 # vLLM is the same commit as docker/Dockerfile's, without its DiffusionGemma patches. Qwen3-8B-FP8
 # runs FP8 on Ada and newer, and as weight-only FP8 through Marlin on Ampere (RTX 3090).
-ARG BASE_IMAGE=razorback16/openjev-base:cu130-torch2.13
+ARG BASE_IMAGE=zeus-base:cu130-torch2.13
 FROM ${BASE_IMAGE}
 
 ARG VLLM_REPO=https://github.com/vllm-project/vllm
@@ -20,13 +20,13 @@ RUN uv pip install --python /opt/venv/bin/python --no-cache --no-deps contrastiv
 
 WORKDIR /app
 COPY pyproject.toml README.md ./
-COPY openjev ./openjev
+COPY zeus ./zeus
 RUN uv pip install --python /opt/venv/bin/python --no-cache .
-COPY docker/entrypoint.sh /usr/local/bin/openjev-entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/zeus-entrypoint
 
-ENV OPENJEV_BACKEND=clm OPENJEV_UPSTREAM_MODEL=qwen3-8b OPENJEV_HOST=0.0.0.0 OPENJEV_PORT=8080
+ENV ZEUS_BACKEND=clm ZEUS_UPSTREAM_MODEL=qwen3-8b ZEUS_HOST=0.0.0.0 ZEUS_PORT=8080
 ENV VLLM_USE_DEEP_GEMM=0
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --start-period=600s \
     CMD curl -sf http://127.0.0.1:8080/health || exit 1
-ENTRYPOINT ["openjev-entrypoint"]
+ENTRYPOINT ["zeus-entrypoint"]

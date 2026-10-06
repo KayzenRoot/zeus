@@ -30,85 +30,98 @@ def _env_num(name, cast, default=None, minimum=None):
     return value
 
 
+def _reject_legacy_auth_environment():
+    """Fail closed if pre-Zeus authentication secrets are still configured."""
+    legacy_prefix = "OPEN" + "JEV_"
+    for suffix in ("API_KEY", "ORIGIN_SECRET"):
+        legacy_name = legacy_prefix + suffix
+        if os.environ.get(legacy_name):
+            current_name = "ZEUS_" + suffix
+            raise ValueError(
+                f"Legacy authentication environment detected for {suffix}; "
+                f"remove it and configure {current_name} before starting Zeus."
+            )
+
+
 @dataclass(frozen=True)
 class Settings:
-    upstream: str = field(default_factory=lambda: _env("OPENJEV_UPSTREAM", "http://127.0.0.1:8000"))
-    upstream_model: str = field(default_factory=lambda: _env("OPENJEV_UPSTREAM_MODEL", "dgemma"))
-    tokenizer: str = field(default_factory=lambda: _env("OPENJEV_TOKENIZER", "nvidia/diffusiongemma-26B-A4B-it-NVFP4"))
-    backend: str = field(default_factory=lambda: _env("OPENJEV_BACKEND", "vllm"))
-    mlx_model: str = field(default_factory=lambda: _env("OPENJEV_MLX_MODEL", "mlx-community/diffusiongemma-26B-A4B-it-4bit"))
-    mlx_max_prompt: int = field(default_factory=lambda: int(_env("OPENJEV_MLX_MAX_PROMPT", "32768")))
+    upstream: str = field(default_factory=lambda: _env("ZEUS_UPSTREAM", "http://127.0.0.1:8000"))
+    upstream_model: str = field(default_factory=lambda: _env("ZEUS_UPSTREAM_MODEL", "dgemma"))
+    tokenizer: str = field(default_factory=lambda: _env("ZEUS_TOKENIZER", "nvidia/diffusiongemma-26B-A4B-it-NVFP4"))
+    backend: str = field(default_factory=lambda: _env("ZEUS_BACKEND", "vllm"))
+    mlx_model: str = field(default_factory=lambda: _env("ZEUS_MLX_MODEL", "mlx-community/diffusiongemma-26B-A4B-it-4bit"))
+    mlx_max_prompt: int = field(default_factory=lambda: int(_env("ZEUS_MLX_MAX_PROMPT", "32768")))
     # MLX buffer pool ceiling, in GB. Unset leaves MLX alone, whose own default
     # is the memory limit. 0 DISABLES the cache, which is the worst allocator
     # churn rather than the old behaviour - see mlx_backend.apply_mlx_settings.
     mlx_cache_limit_gb: float | None = field(
-        default_factory=lambda: _env_num("OPENJEV_MLX_CACHE_LIMIT_GB", float, minimum=0))
+        default_factory=lambda: _env_num("ZEUS_MLX_CACHE_LIMIT_GB", float, minimum=0))
     # Prefill cache size in ENTRIES. See mlx_backend.PROMPT_CACHE_TOKENS for why
     # entries as well as tokens: an entry costs KV cache, not prompt length.
     mlx_prompt_cache: int = field(
-        default_factory=lambda: _env_num("OPENJEV_MLX_PROMPT_CACHE", int, default=12, minimum=0))
-    canvas: int = field(default_factory=lambda: int(_env("OPENJEV_CANVAS", "64")))
-    canvas_step: int = field(default_factory=lambda: int(_env("OPENJEV_CANVAS_STEP", "16")))
-    max_inflight: int = field(default_factory=lambda: int(_env("OPENJEV_MAX_INFLIGHT", "64")))
-    max_queue: int = field(default_factory=lambda: int(_env("OPENJEV_MAX_QUEUE", "512")))
+        default_factory=lambda: _env_num("ZEUS_MLX_PROMPT_CACHE", int, default=12, minimum=0))
+    canvas: int = field(default_factory=lambda: int(_env("ZEUS_CANVAS", "64")))
+    canvas_step: int = field(default_factory=lambda: int(_env("ZEUS_CANVAS_STEP", "16")))
+    max_inflight: int = field(default_factory=lambda: int(_env("ZEUS_MAX_INFLIGHT", "64")))
+    max_queue: int = field(default_factory=lambda: int(_env("ZEUS_MAX_QUEUE", "512")))
     # Per-request bounds, so one body cannot fan out into unbounded work or memory.
-    max_questions: int = field(default_factory=lambda: int(_env("OPENJEV_MAX_QUESTIONS", "256")))
-    max_body_bytes: int = field(default_factory=lambda: int(_env("OPENJEV_MAX_BODY_BYTES", str(64 * 1024 * 1024))))
-    # Seconds before a request passed through to another OpenJev container is a 503:
+    max_questions: int = field(default_factory=lambda: int(_env("ZEUS_MAX_QUESTIONS", "256")))
+    max_body_bytes: int = field(default_factory=lambda: int(_env("ZEUS_MAX_BODY_BYTES", str(64 * 1024 * 1024))))
+    # Seconds before a request passed through to another Zeus container is a 503:
     # a heavy read (samples x groups, a long thought) can legitimately take minutes.
-    forward_timeout: float = field(default_factory=lambda: float(_env("OPENJEV_FORWARD_TIMEOUT", "300")))
-    # Optional auth. OPENJEV_API_KEY: clients send it as a Bearer token.
-    # OPENJEV_ORIGIN_SECRET: a front proxy sends it as X-Origin-Secret.
-    api_key: str = field(default_factory=lambda: _env("OPENJEV_API_KEY", ""))
-    origin_secret: str = field(default_factory=lambda: _env("OPENJEV_ORIGIN_SECRET", ""))
-    auto_threshold: float = field(default_factory=lambda: float(_env("OPENJEV_AUTO_THRESHOLD", "0.1")))
-    auto_max: int = field(default_factory=lambda: int(_env("OPENJEV_AUTO_MAX", "4")))
+    forward_timeout: float = field(default_factory=lambda: float(_env("ZEUS_FORWARD_TIMEOUT", "300")))
+    # Optional auth. ZEUS_API_KEY: clients send it as a Bearer token.
+    # ZEUS_ORIGIN_SECRET: a front proxy sends it as X-Origin-Secret.
+    api_key: str = field(default_factory=lambda: _env("ZEUS_API_KEY", ""))
+    origin_secret: str = field(default_factory=lambda: _env("ZEUS_ORIGIN_SECRET", ""))
+    auto_threshold: float = field(default_factory=lambda: float(_env("ZEUS_AUTO_THRESHOLD", "0.1")))
+    auto_max: int = field(default_factory=lambda: int(_env("ZEUS_AUTO_MAX", "4")))
     # vLLM's diffusion_constrained: each read scores only its label tokens, not the
     # whole vocabulary. Off by default: the logprobs come back normalized over the
     # labels, so a slot's entropy, and with it auto_threshold's re-reads, change meaning.
-    constrained: bool = field(default_factory=lambda: _env("OPENJEV_CONSTRAINED", "0") == "1")
-    max_images: int = field(default_factory=lambda: int(_env("OPENJEV_MAX_IMAGES", "8")))
-    max_image_bytes: int = field(default_factory=lambda: int(_env("OPENJEV_MAX_IMAGE_BYTES", str(5 * 1024 * 1024))))
+    constrained: bool = field(default_factory=lambda: _env("ZEUS_CONSTRAINED", "0") == "1")
+    max_images: int = field(default_factory=lambda: int(_env("ZEUS_MAX_IMAGES", "8")))
+    max_image_bytes: int = field(default_factory=lambda: int(_env("ZEUS_MAX_IMAGE_BYTES", str(5 * 1024 * 1024))))
     # Kept small: generation denoises many blocks and must not crowd out System One reads.
-    gen_max_inflight: int = field(default_factory=lambda: int(_env("OPENJEV_GEN_MAX_INFLIGHT", "8")))
-    gen_max_queue: int = field(default_factory=lambda: int(_env("OPENJEV_GEN_MAX_QUEUE", "32")))
-    gen_max_tokens: int = field(default_factory=lambda: int(_env("OPENJEV_GEN_MAX_TOKENS", "8192")))
-    # The encoder backends (OPENJEV_BACKEND=laya, verdict, clm or jevk5). OPENJEV_DEVICE empty picks CUDA when present.
-    laya_model: str = field(default_factory=lambda: _env("OPENJEV_LAYA_MODEL", "convaiinnovations/laya-typed-decisions"))
-    verdict_model: str = field(default_factory=lambda: _env("OPENJEV_VERDICT_MODEL", "heman10x/rlcd-modernbert-151m"))
-    device: str = field(default_factory=lambda: _env("OPENJEV_DEVICE", ""))
-    encoder_batch: int = field(default_factory=lambda: int(_env("OPENJEV_ENCODER_BATCH", "16")))
-    # CLM (OPENJEV_BACKEND=clm): its heads read Qwen3-8B embeddings from the vLLM server at OPENJEV_UPSTREAM.
-    # OPENJEV_CLM_HEAD is a Hugging Face repo holding CLM_v0.1-8B.pt, or a local .pt file.
-    clm_head: str = field(default_factory=lambda: _env("OPENJEV_CLM_HEAD", "Contrastive-LM/CLM-v0.1-8B"))
-    clm_max_tokens: int = field(default_factory=lambda: int(_env("OPENJEV_CLM_MAX_TOKENS", "2048")))
-    clm_workers: int = field(default_factory=lambda: int(_env("OPENJEV_CLM_WORKERS", "32")))
-    clm_cache: str = field(default_factory=lambda: _env("OPENJEV_CLM_CACHE", "256MiB"))
-    clm_embed_cache: int = field(default_factory=lambda: int(_env("OPENJEV_CLM_EMBED_CACHE", "20000")))
-    # JevK5 (OPENJEV_BACKEND=jevk5): the weights the vLLM server at OPENJEV_UPSTREAM serves. Their
+    gen_max_inflight: int = field(default_factory=lambda: int(_env("ZEUS_GEN_MAX_INFLIGHT", "8")))
+    gen_max_queue: int = field(default_factory=lambda: int(_env("ZEUS_GEN_MAX_QUEUE", "32")))
+    gen_max_tokens: int = field(default_factory=lambda: int(_env("ZEUS_GEN_MAX_TOKENS", "8192")))
+    # The encoder backends (ZEUS_BACKEND=laya, verdict, clm or jevk5). ZEUS_DEVICE empty picks CUDA when present.
+    laya_model: str = field(default_factory=lambda: _env("ZEUS_LAYA_MODEL", "convaiinnovations/laya-typed-decisions"))
+    verdict_model: str = field(default_factory=lambda: _env("ZEUS_VERDICT_MODEL", "heman10x/rlcd-modernbert-151m"))
+    device: str = field(default_factory=lambda: _env("ZEUS_DEVICE", ""))
+    encoder_batch: int = field(default_factory=lambda: int(_env("ZEUS_ENCODER_BATCH", "16")))
+    # CLM (ZEUS_BACKEND=clm): its heads read Qwen3-8B embeddings from the vLLM server at ZEUS_UPSTREAM.
+    # ZEUS_CLM_HEAD is a Hugging Face repo holding CLM_v0.1-8B.pt, or a local .pt file.
+    clm_head: str = field(default_factory=lambda: _env("ZEUS_CLM_HEAD", "Contrastive-LM/CLM-v0.1-8B"))
+    clm_max_tokens: int = field(default_factory=lambda: int(_env("ZEUS_CLM_MAX_TOKENS", "2048")))
+    clm_workers: int = field(default_factory=lambda: int(_env("ZEUS_CLM_WORKERS", "32")))
+    clm_cache: str = field(default_factory=lambda: _env("ZEUS_CLM_CACHE", "256MiB"))
+    clm_embed_cache: int = field(default_factory=lambda: int(_env("ZEUS_CLM_EMBED_CACHE", "20000")))
+    # JevK5 (ZEUS_BACKEND=jevk5): the weights the vLLM server at ZEUS_UPSTREAM serves. Their
     # jevk5_config.json holds the calibration temperature.
-    jevk5_model: str = field(default_factory=lambda: _env("OPENJEV_MODEL", "alibiserikbay/JevK5"))
-    jevk5_workers: int = field(default_factory=lambda: int(_env("OPENJEV_JEVK5_WORKERS", "32")))
-    warmup: bool = field(default_factory=lambda: _env("OPENJEV_WARMUP", "1") != "0")
-    # Other System One models served by other OpenJev containers: "name=url,name=url".
+    jevk5_model: str = field(default_factory=lambda: _env("ZEUS_MODEL", "alibiserikbay/JevK5"))
+    jevk5_workers: int = field(default_factory=lambda: int(_env("ZEUS_JEVK5_WORKERS", "32")))
+    warmup: bool = field(default_factory=lambda: _env("ZEUS_WARMUP", "1") != "0")
+    # Other System One models served by other Zeus containers: "name=url,name=url".
     # A request for one of them is passed through unchanged, so one origin serves all.
-    model_routes: dict = field(default_factory=lambda: parse_routes(_env("OPENJEV_MODEL_ROUTES", "")))
+    model_routes: dict = field(default_factory=lambda: parse_routes(_env("ZEUS_MODEL_ROUTES", "")))
 
     def __post_init__(self):
-        """Refuse values a bad environment would otherwise turn into 500s or hangs:
-        canvas_step=0 divides by zero on the first read, and a semaphore built with
-        0 never opens, so every request would wait out its timeout instead of a 529."""
+        """Reject unsafe migration state and invalid values before serving traffic."""
+        _reject_legacy_auth_environment()
+
         positive = ("canvas", "canvas_step", "max_inflight", "max_questions", "max_body_bytes",
                     "max_image_bytes", "gen_max_inflight", "gen_max_tokens", "mlx_max_prompt",
                     "encoder_batch", "clm_workers", "jevk5_workers", "forward_timeout")
         for name in positive:
             if getattr(self, name) < 1:
                 raise ValueError(f"{name} must be at least 1, got {getattr(self, name)!r} "
-                                 f"(OPENJEV_{name.upper()})")
+                                 f"(ZEUS_{name.upper()})")
         for name in ("max_queue", "gen_max_queue", "max_images"):
             if getattr(self, name) < 0:
                 raise ValueError(f"{name} must not be negative, got {getattr(self, name)!r} "
-                                 f"(OPENJEV_{name.upper()})")
+                                 f"(ZEUS_{name.upper()})")
 
 
 def parse_routes(text):
@@ -116,21 +129,21 @@ def parse_routes(text):
     for part in filter(None, (p.strip() for p in text.split(","))):
         name, sep, url = part.partition("=")
         if not (sep and name.strip() and url.strip()):
-            raise ValueError(f"OPENJEV_MODEL_ROUTES: {part!r} is not name=url")
+            raise ValueError(f"ZEUS_MODEL_ROUTES: {part!r} is not name=url")
         routes[name.strip()] = url.strip().rstrip("/")
     return routes
 
 
-MODEL_VERSION = "openjev-0.1"
-# openjev-0.1 is the wire name of this model, not the package version (see __init__.py).
-MODEL_ALIASES = {"openjev-latest", MODEL_VERSION}
+MODEL_VERSION = "zeus-0.1"
+# zeus-0.1 is the wire name of this model, not the package version (see __init__.py).
+MODEL_ALIASES = {"zeus-latest", MODEL_VERSION}
 GEN_MODEL = "diffusiongemma-26b"
 # accepted so TypeSafe's SDKs work unchanged (their default is jev-latest)
 SDK_ALIASES = {"jev-latest", "jev-preview"}
 MODELS = [
-    {"name": "openjev-latest", "description": "Alias for the newest OpenJev release. Currently openjev-0.1.",
+    {"name": "zeus-latest", "description": "Alias for the newest Zeus release. Currently zeus-0.1.",
      "release_date": "2026-09-18"},
-    {"name": "openjev-0.1", "description": "OpenJev 0.1: DiffusionGemma 26B-A4B (NVFP4) on vLLM's structured reads.",
+    {"name": "zeus-0.1", "description": "Zeus 0.1: DiffusionGemma 26B-A4B (NVFP4) on vLLM's structured reads.",
      "release_date": "2026-09-18"},
     {"name": GEN_MODEL, "description": "DiffusionGemma 26B-A4B (NVFP4) text generation at POST /v1/chat/completions.",
      "release_date": "2026-09-18"},

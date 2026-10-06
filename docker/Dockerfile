@@ -1,7 +1,7 @@
-# OpenJev: vLLM with DiffusionGemma structured reads, plus the Jev-compatible API server.
+# Zeus: vLLM with DiffusionGemma structured reads, plus the Jev-compatible API server.
 # Build docker/Dockerfile.base first. Laya and Verdict start from the same base, in
 # docker/Dockerfile.laya and docker/Dockerfile.verdict.
-#   docker build -f docker/Dockerfile -t razorback16/openjev .
+#   docker build -f docker/Dockerfile -t zeus .
 #
 # Upstream main as of 2026-10-06, the newest commit with a published wheel, so the
 # compiled kernels are downloaded rather than built: no CUDA build here. Since the
@@ -9,7 +9,7 @@
 # (#58216), a one-pass sampler statistics kernel (#58226), quant_config on the LM
 # head (#48521), and an attention mask that no longer freezes under CUDA graph
 # replay (#51994). Neither patch below is upstream yet; both still apply here.
-ARG BASE_IMAGE=razorback16/openjev-base:cu130-torch2.13
+ARG BASE_IMAGE=zeus-base:cu130-torch2.13
 FROM ${BASE_IMAGE}
 
 ARG VLLM_REPO=https://github.com/vllm-project/vllm
@@ -43,12 +43,12 @@ RUN python /tmp/vision_prefix_lm.py /opt/vllm/vllm/model_executor/models/diffusi
 # The API server goes last so a code change only rebuilds a few small layers.
 WORKDIR /app
 COPY pyproject.toml README.md ./
-COPY openjev ./openjev
+COPY zeus ./zeus
 RUN uv pip install --python /opt/venv/bin/python --no-cache .
-COPY docker/entrypoint.sh /usr/local/bin/openjev-entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/zeus-entrypoint
 
-ENV OPENJEV_HOST=0.0.0.0 OPENJEV_PORT=8080
+ENV ZEUS_HOST=0.0.0.0 ZEUS_PORT=8080
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --start-period=900s \
     CMD curl -sf http://127.0.0.1:8080/health || exit 1
-ENTRYPOINT ["openjev-entrypoint"]
+ENTRYPOINT ["zeus-entrypoint"]

@@ -8,10 +8,10 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from openjev import encoders
-from openjev.api import create_app
-from openjev.config import Settings, parse_routes, served_models
-from openjev.encoders import ClmEngine, EncoderEngine, JevK5Engine, VerdictEngine, verdict_prompt
+from zeus import encoders
+from zeus.api import create_app
+from zeus.config import Settings, parse_routes, served_models
+from zeus.encoders import ClmEngine, EncoderEngine, JevK5Engine, VerdictEngine, verdict_prompt
 
 REQUEST = {
     "state": "I was charged twice this month.",
@@ -80,9 +80,9 @@ def test_typesafe_sdk_default_model_is_accepted(client):
 
 def test_models_and_unknown_model(client):
     assert [m["name"] for m in client.get("/v1/models").json()["models"]] == ["laya-1.0"]
-    r = client.post("/v1/systemone", json=dict(REQUEST, model="openjev-latest"))
+    r = client.post("/v1/systemone", json=dict(REQUEST, model="zeus-latest"))
     assert r.status_code == 400
-    assert r.json()["detail"]["message"] == "Unknown model: openjev-latest"
+    assert r.json()["detail"]["message"] == "Unknown model: zeus-latest"
 
 
 def test_no_text_generation(client):
@@ -134,7 +134,7 @@ def test_limits(client):
 
 
 def test_routes_forward_other_models(monkeypatch):
-    monkeypatch.setenv("OPENJEV_MODEL_ROUTES", "verdict-1.4=http://verdict:8080/, laya-1.0=http://laya:8080")
+    monkeypatch.setenv("ZEUS_MODEL_ROUTES", "verdict-1.4=http://verdict:8080/, laya-1.0=http://laya:8080")
     monkeypatch.setitem(encoders.ENGINES, "laya", FakeEngine)
     seen = []
 

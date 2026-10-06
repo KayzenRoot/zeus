@@ -11,10 +11,10 @@ import pytest
 from fastapi.testclient import TestClient
 from transformers import AutoTokenizer
 
-from openjev import mlx_backend
-from openjev.api import create_app
-from openjev.config import Settings
-from openjev.engine import PAD, TURN_CLOSE, Engine, SchemaError
+from zeus import mlx_backend
+from zeus.api import create_app
+from zeus.config import Settings
+from zeus.engine import PAD, TURN_CLOSE, Engine, SchemaError
 
 from test_api import EXAMPLE, PNG, TOKENIZER
 
@@ -590,7 +590,7 @@ class _FakePrompt:
 def _runtime(entries=None):
     """An MlxRuntime without a model. __init__ loads 15 GB of weights on a
     thread; the eviction rule under test touches none of it."""
-    from openjev.mlx_backend import MlxRuntime
+    from zeus.mlx_backend import MlxRuntime
     rt = object.__new__(MlxRuntime)
     rt.init_prefill_cache()          # the real defaults, not a hand copy
     if entries is not None:
@@ -640,7 +640,7 @@ def test_long_prompts_are_still_bounded_by_tokens():
     Asserted against the budget itself, not the budget plus one entry. The looser
     form passed even when a regression kept an extra 8192-token entry.
     """
-    from openjev.mlx_backend import PROMPT_CACHE_TOKENS
+    from zeus.mlx_backend import PROMPT_CACHE_TOKENS
     rt = _runtime(entries=12)
     for i in range(6):
         rt._prefill(_FakePrompt(f"big{i}", 8192), max_tokens=32768)
@@ -650,8 +650,8 @@ def test_long_prompts_are_still_bounded_by_tokens():
 
 def test_no_entry_is_exempt_from_eviction():
     """The old rule kept one entry whatever its size, so a single prompt at
-    OPENJEV_MLX_MAX_PROMPT sat permanently at twice the token budget."""
-    from openjev.mlx_backend import PROMPT_CACHE_TOKENS
+    ZEUS_MLX_MAX_PROMPT sat permanently at twice the token budget."""
+    from zeus.mlx_backend import PROMPT_CACHE_TOKENS
     rt = _runtime(entries=12)
     rt._prefill(_FakePrompt("huge", 32768), max_tokens=32768)
     assert rt.prefill_tokens <= PROMPT_CACHE_TOKENS
@@ -677,7 +677,7 @@ def test_the_running_token_total_tracks_the_cache():
 
 
 def test_the_default_entry_count_comes_from_the_module():
-    from openjev.mlx_backend import DEFAULT_PROMPT_CACHE_ENTRIES
+    from zeus.mlx_backend import DEFAULT_PROMPT_CACHE_ENTRIES
     rt = _runtime()
     assert rt.prompt_cache_entries == DEFAULT_PROMPT_CACHE_ENTRIES
 
@@ -711,26 +711,26 @@ def test_a_zero_cache_limit_is_not_the_same_as_unset():
     """0 DISABLES MLX's buffer cache; unset leaves MLX's own default alone. A
     settings reader that treats "" and "0" alike loses that distinction."""
     import os
-    from openjev.config import Settings as S
-    old = os.environ.get("OPENJEV_MLX_CACHE_LIMIT_GB")
+    from zeus.config import Settings as S
+    old = os.environ.get("ZEUS_MLX_CACHE_LIMIT_GB")
     try:
-        os.environ["OPENJEV_MLX_CACHE_LIMIT_GB"] = "0"
+        os.environ["ZEUS_MLX_CACHE_LIMIT_GB"] = "0"
         assert S().mlx_cache_limit_gb == 0.0
-        os.environ["OPENJEV_MLX_CACHE_LIMIT_GB"] = ""
+        os.environ["ZEUS_MLX_CACHE_LIMIT_GB"] = ""
         assert S().mlx_cache_limit_gb is None
     finally:
-        os.environ.pop("OPENJEV_MLX_CACHE_LIMIT_GB", None)
+        os.environ.pop("ZEUS_MLX_CACHE_LIMIT_GB", None)
         if old is not None:
-            os.environ["OPENJEV_MLX_CACHE_LIMIT_GB"] = old
+            os.environ["ZEUS_MLX_CACHE_LIMIT_GB"] = old
 
 
 def test_a_bad_setting_names_itself():
     """int(os.environ[...]) raises naming only the bad text, at import, so one
     mistyped variable failed the service with a message that did not say which."""
     import os, pytest
-    from openjev.config import Settings as S
-    for var, value, needle in (("OPENJEV_MLX_CACHE_LIMIT_GB", "4GB", "not a float"),
-                               ("OPENJEV_MLX_PROMPT_CACHE", "-3", "below the minimum")):
+    from zeus.config import Settings as S
+    for var, value, needle in (("ZEUS_MLX_CACHE_LIMIT_GB", "4GB", "not a float"),
+                               ("ZEUS_MLX_PROMPT_CACHE", "-3", "below the minimum")):
         old = os.environ.get(var)
         try:
             os.environ[var] = value

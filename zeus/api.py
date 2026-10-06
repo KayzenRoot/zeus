@@ -4,11 +4,11 @@ Request, response and error shapes follow TypeSafe's published OpenAPI 0.2.0,
 so their SDKs work against this server by pointing TYPESAFE_BASE_URL at it.
 Optional request fields beyond that contract (images, steps, samples, think,
 sequential) are ignored by the SDKs and change nothing when left out.
-POST /v1/chat/completions (openjev.chat) serves ordinary text generation.
+POST /v1/chat/completions (zeus.chat) serves ordinary text generation.
 
-OPENJEV_BACKEND picks what answers: DiffusionGemma through vLLM or MLX, or one
-of the small encoder models (openjev.encoders). A request for a model listed in
-OPENJEV_MODEL_ROUTES is passed through to the OpenJev container serving it.
+ZEUS_BACKEND picks what answers: DiffusionGemma through vLLM or MLX, or one
+of the small encoder models (zeus.encoders). A request for a model listed in
+ZEUS_MODEL_ROUTES is passed through to the Zeus container serving it.
 """
 import base64
 import binascii
@@ -117,7 +117,7 @@ def error(status, error_type, message, headers=None):
     return JSONResponse({"detail": {"error_type": error_type, "message": message}}, status_code=status, headers=headers)
 
 
-log = logging.getLogger("openjev")
+log = logging.getLogger("zeus")
 
 # A rejected body is never logged: only where it was wrong and why, so common client
 # mistakes are visible without keeping anyone's data.
@@ -189,7 +189,7 @@ def create_app(settings=None, tokenizer=None):
         await app.state.generator.close()
         await app.state.routes.aclose()
 
-    app = FastAPI(title="OpenJev", version=__version__, lifespan=lifespan)
+    app = FastAPI(title="Zeus", version=__version__, lifespan=lifespan)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_body(request: Request, exc: RequestValidationError):
@@ -302,7 +302,7 @@ async def forward(request, url):
 
 
 async def read_capped_body(settings, request):
-    """Read a POST body up to OPENJEV_MAX_BODY_BYTES, or the 413 past it. Neither
+    """Read a POST body up to ZEUS_MAX_BODY_BYTES, or the 413 past it. Neither
     uvicorn nor FastAPI bounds a body; this runs past auth, so an anonymous giant
     is refused before it costs any memory."""
     if request.method != "POST":

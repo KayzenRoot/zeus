@@ -1,10 +1,10 @@
-"""End to end against a running OpenJev server, whichever backend and wherever it runs:
+"""End to end against a running Zeus server, whichever backend and wherever it runs:
 
-    OPENJEV_LIVE_URL=http://127.0.0.1:8080 pytest tests/test_live.py -v
+    ZEUS_LIVE_URL=http://127.0.0.1:8080 pytest tests/test_live.py -v
 
-Set OPENJEV_API_KEY or OPENJEV_ORIGIN_SECRET too if the server wants one. Set OPENJEV_LIVE_GATEWAY=1 when a gateway
+Set ZEUS_API_KEY or ZEUS_ORIGIN_SECRET too if the server wants one. Set ZEUS_LIVE_GATEWAY=1 when a gateway
 (such as codiv's) sits in front and strips `Server-Timing`. Run it after building an image or
-before a cutover. The DiffusionGemma checks run when the server lists `openjev-latest`;
+before a cutover. The DiffusionGemma checks run when the server lists `zeus-latest`;
 the encoder checks run for whichever of `laya-1.0`, `verdict-1.4`, `clm-v0.1` and `jevk5-0.2` it lists.
 """
 import base64
@@ -16,9 +16,9 @@ import pathlib
 import httpx
 import pytest
 
-URL = os.environ.get("OPENJEV_LIVE_URL")
-GATEWAY = os.environ.get("OPENJEV_LIVE_GATEWAY") == "1"
-pytestmark = pytest.mark.skipif(not URL, reason="set OPENJEV_LIVE_URL to a running OpenJev server")
+URL = os.environ.get("ZEUS_LIVE_URL")
+GATEWAY = os.environ.get("ZEUS_LIVE_GATEWAY") == "1"
+pytestmark = pytest.mark.skipif(not URL, reason="set ZEUS_LIVE_URL to a running Zeus server")
 
 QUESTIONS = {
     "urgent": {"type": "noul", "instructions": "Does the customer need a reply within the hour?"},
@@ -33,9 +33,9 @@ HOTDOG = "data:image/jpeg;base64," + base64.b64encode(
 
 @pytest.fixture(scope="module")
 def client():
-    headers = {"Authorization": f"Bearer {os.environ['OPENJEV_API_KEY']}"} if os.environ.get("OPENJEV_API_KEY") else {}
-    if os.environ.get("OPENJEV_ORIGIN_SECRET"):
-        headers["X-Origin-Secret"] = os.environ["OPENJEV_ORIGIN_SECRET"]
+    headers = {"Authorization": f"Bearer {os.environ['ZEUS_API_KEY']}"} if os.environ.get("ZEUS_API_KEY") else {}
+    if os.environ.get("ZEUS_ORIGIN_SECRET"):
+        headers["X-Origin-Secret"] = os.environ["ZEUS_ORIGIN_SECRET"]
     with httpx.Client(base_url=URL, headers=headers, timeout=300) as c:
         yield c
 
@@ -49,11 +49,11 @@ def models(client):
 
 @pytest.fixture
 def dgemma(models):
-    if "openjev-latest" not in models:
+    if "zeus-latest" not in models:
         pytest.skip("the server does not serve DiffusionGemma")
 
 
-def ask(client, questions=QUESTIONS, state=STATE, model="openjev-latest", **extra):
+def ask(client, questions=QUESTIONS, state=STATE, model="zeus-latest", **extra):
     r = client.post("/v1/systemone", json={"model": model, "state": state, "questions": questions, **extra})
     assert r.status_code == 200, r.text
     assert GATEWAY or "server-timing" in r.headers
@@ -108,7 +108,7 @@ def test_unknown_model(client):
 def test_concurrent_reads(client, dgemma):
     with concurrent.futures.ThreadPoolExecutor(32) as ex:
         codes = list(ex.map(lambda i: client.post("/v1/systemone", json={
-            "model": "openjev-latest", "state": f"{STATE} (ticket {i})", "questions": QUESTIONS}).status_code, range(64)))
+            "model": "zeus-latest", "state": f"{STATE} (ticket {i})", "questions": QUESTIONS}).status_code, range(64)))
     assert codes == [200] * 64
 
 

@@ -13,6 +13,7 @@ Never commit:
 
 ## Rebrand security requirements
 - Environment-variable rename must not introduce hard-coded credentials.
+- Zeus must fail closed if pre-Zeus authentication secrets are still configured, preventing migration from silently disabling API-key or origin-secret enforcement.
 - Docker examples must use placeholders.
 - No destructive Git history rewrite.
 - Historical provenance remains immutable.

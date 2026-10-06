@@ -1,14 +1,14 @@
 """The MLX backend against real weights, on Apple silicon:
 
-    OPENJEV_MLX_TEST_MODEL=~/models/diffusiongemma-26B-A4B-it-4bit pytest tests/test_mlx_model.py
+    ZEUS_MLX_TEST_MODEL=~/models/diffusiongemma-26B-A4B-it-4bit pytest tests/test_mlx_model.py
 """
 import os
 
 import pytest
 from fastapi.testclient import TestClient
 
-MODEL = os.environ.get("OPENJEV_MLX_TEST_MODEL")
-pytestmark = pytest.mark.skipif(not MODEL, reason="set OPENJEV_MLX_TEST_MODEL to an MLX DiffusionGemma checkpoint")
+MODEL = os.environ.get("ZEUS_MLX_TEST_MODEL")
+pytestmark = pytest.mark.skipif(not MODEL, reason="set ZEUS_MLX_TEST_MODEL to an MLX DiffusionGemma checkpoint")
 
 QUESTIONS = {
     "urgent": {"type": "noul", "instructions": "Does the customer need a reply within the hour?"},
@@ -25,15 +25,15 @@ STATES = {  # state -> (urgent, team, tone level)
 
 @pytest.fixture(scope="module")
 def client():
-    from openjev.api import create_app
-    from openjev.config import Settings
+    from zeus.api import create_app
+    from zeus.config import Settings
 
     with TestClient(create_app(Settings(backend="mlx", mlx_model=os.path.expanduser(MODEL)))) as c:
         yield c
 
 
 def ask(client, state, questions=QUESTIONS, **extra):
-    r = client.post("/v1/systemone", json={"state": state, "model": "openjev-latest", "questions": questions, **extra})
+    r = client.post("/v1/systemone", json={"state": state, "model": "zeus-latest", "questions": questions, **extra})
     assert r.status_code == 200, r.text
     return r.json()
 
@@ -107,7 +107,7 @@ def test_an_image_prefill_reads_the_same_cold_or_reused(client):
     """Mirrors test_a_cached_prefill_reads_the_same: the decoder pass must leave
     an image prompt's cache as it found it, or re-reads would drift."""
     rt = client.app.state.engine.runtime
-    body = {"state": "What colour is this?", "model": "openjev-latest",
+    body = {"state": "What colour is this?", "model": "zeus-latest",
             "questions": COLOUR, "images": [solid_png((255, 0, 0))]}
     rt.pool.submit(rt.prefills.clear).result()
     cold = client.post("/v1/systemone", json=body)
@@ -147,7 +147,7 @@ def test_steps_hold_the_template_and_reuse_one_prefill(client):
     """The canvas outside the answer slots is what vLLM pins with diffusion_pinned.
     Here it is never written, so it cannot drift however many steps run. steps=1
     must also be exactly the single pass it was before the loop existed."""
-    from openjev import mlx_backend
+    from zeus import mlx_backend
 
     engine = client.app.state.engine
     rt = engine.runtime
@@ -264,7 +264,7 @@ def test_chat_json_mode_returns_one_object(client):
 
 
 def test_the_prompt_cache_is_bounded_in_tokens(client):
-    from openjev import mlx_backend
+    from zeus import mlx_backend
 
     rt = client.app.state.engine.runtime
     for i in range(12):
