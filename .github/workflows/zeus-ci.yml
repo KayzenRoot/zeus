@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          uv run --no-sync python - <<'PY'
+          uv run --no-build --no-sync python - <<'PY'
           import tomllib
           import zeus
           data = tomllib.load(open("pyproject.toml", "rb"))
@@ -44,10 +44,10 @@ jobs:
           assert zeus.__version__ == "0.1.0", zeus.__version__
           print("Zeus", zeus.__version__)
           PY
-          uv run --no-sync python -m compileall -q zeus
+          uv run --no-build --no-sync python -m compileall -q zeus
 
       - name: Unit and API tests
-        run: uv run --no-sync python -m pytest -q
+        run: uv run --no-build --no-sync python -m pytest -q
 
       - name: Docker Compose config
         run: docker compose config >/dev/null
