@@ -23,3 +23,4 @@
 ## Security
 - ZREQ-SEC-001: No secrets/API keys are committed.
 - ZREQ-SEC-002: Public CI may use only non-secret configuration or repository secrets referenced indirectly.
+- ZREQ-SEC-003: Startup must fail closed when legacy authentication-secret environment configuration is detected, so migration cannot silently disable authentication.

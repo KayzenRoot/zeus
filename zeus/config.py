@@ -30,6 +30,19 @@ def _env_num(name, cast, default=None, minimum=None):
     return value
 
 
+def _reject_legacy_auth_environment():
+    """Fail closed if pre-Zeus authentication secrets are still configured."""
+    legacy_prefix = "OPEN" + "JEV_"
+    for suffix in ("API_KEY", "ORIGIN_SECRET"):
+        legacy_name = legacy_prefix + suffix
+        if os.environ.get(legacy_name):
+            current_name = "ZEUS_" + suffix
+            raise ValueError(
+                f"Legacy authentication environment detected for {suffix}; "
+                f"remove it and configure {current_name} before starting Zeus."
+            )
+
+
 @dataclass(frozen=True)
 class Settings:
     upstream: str = field(default_factory=lambda: _env("ZEUS_UPSTREAM", "http://127.0.0.1:8000"))
@@ -95,9 +108,9 @@ class Settings:
     model_routes: dict = field(default_factory=lambda: parse_routes(_env("ZEUS_MODEL_ROUTES", "")))
 
     def __post_init__(self):
-        """Refuse values a bad environment would otherwise turn into 500s or hangs:
-        canvas_step=0 divides by zero on the first read, and a semaphore built with
-        0 never opens, so every request would wait out its timeout instead of a 529."""
+        """Reject unsafe migration state and invalid values before serving traffic."""
+        _reject_legacy_auth_environment()
+
         positive = ("canvas", "canvas_step", "max_inflight", "max_questions", "max_body_bytes",
                     "max_image_bytes", "gen_max_inflight", "gen_max_tokens", "mlx_max_prompt",
                     "encoder_batch", "clm_workers", "jevk5_workers", "forward_timeout")

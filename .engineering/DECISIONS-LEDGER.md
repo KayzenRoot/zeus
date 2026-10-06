@@ -23,3 +23,7 @@ ZEUS-ID-WO-001 may change brand-facing identifiers required for a complete Zeus 
 ## ZD-0006 — Zeus version line
 Status: APPROVED
 The first Zeus product identity release is `0.1.0`; imported upstream version numbers remain historical provenance only.
+
+## ZD-0007 — Fail-closed authentication migration
+Status: APPROVED
+During the Zeus identity migration, stale pre-Zeus authentication-secret environment variables must cause startup failure instead of being silently ignored. Operators must explicitly migrate credentials to `ZEUS_API_KEY` / `ZEUS_ORIGIN_SECRET` before Zeus serves traffic.

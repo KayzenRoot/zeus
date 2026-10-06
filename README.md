@@ -53,6 +53,8 @@ Zeus also accepts the TypeSafe SDK compatibility aliases `jev-latest` and `jev-p
 python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[test]'
+# Starts only the Zeus API. With the default vLLM backend, run a vLLM server at
+# ZEUS_UPSTREAM (default: http://127.0.0.1:8000) before sending decision requests.
 python -m zeus
 ```
 
@@ -62,6 +64,8 @@ Windows PowerShell:
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[test]"
+# Starts only the Zeus API. With the default vLLM backend, run a vLLM server at
+# ZEUS_UPSTREAM (default: http://127.0.0.1:8000) before sending decision requests.
 python -m zeus
 ```
 
@@ -104,6 +108,8 @@ ZEUS_WARMUP
 ```
 
 Never commit real API keys or provider credentials. The repository is currently public for CI.
+
+When migrating an existing deployment, remove any pre-Zeus authentication environment variables and configure `ZEUS_API_KEY` / `ZEUS_ORIGIN_SECRET`. Zeus fails closed if legacy authentication secrets are detected.
 
 ## API example
 
