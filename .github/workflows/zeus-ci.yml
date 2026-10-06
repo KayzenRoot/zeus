@@ -29,7 +29,7 @@ jobs:
           enable-cache: false
 
       - name: Install locked wheel-only CI dependencies
-        run: uv pip install --system --no-build --no-cache --requirement .github/ci-requirements.lock
+        run: uv pip sync --system --no-build --no-cache .github/ci-requirements.lock
 
       - name: Package metadata and import smoke
         shell: bash
