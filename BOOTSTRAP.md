@@ -1,12 +1,13 @@
 # Zeus Bootstrap
 
-This repository is being initialized under GEF Bootstrap 1.1.2 before the canonical OpenJev upstream snapshot is imported.
+Zeus is governed by **GEF Bootstrap 1.1.2**.
 
-Bootstrap order:
-1. Establish Git repository baseline.
-2. Install and execute `@gef-bootstrap/cli@1.1.2`.
-3. Verify `gef doctor` and `gef status`.
-4. Import a pinned canonical OpenJev snapshot with provenance and license preserved.
-5. Only then admit Zeus product planning.
+Current bootstrap state:
+- GEF 1.1.2: VERIFIED
+- Canonical baseline import: VERIFIED
+- Canonical Source Pack: ESTABLISHED
+- Active product identity: ZEUS
+- Repository visibility: PUBLIC temporarily for CI
+- Secrets in repository: FORBIDDEN
 
-This file records bootstrap intent only. Canonical Zeus product documentation will be created after the upstream import.
+Read `.engineering/SOURCE-HIERARCHY.md` and `.engineering/CHECKPOINT.md` before changing governed state.

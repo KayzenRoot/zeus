@@ -1,4 +1,4 @@
-"""Throughput and latency of a running OpenJev server, by state length and concurrency.
+"""Throughput and latency of a running Zeus server, by state length and concurrency.
 
     python scripts/bench.py --url http://127.0.0.1:8080 --state-tokens 50 8192 32768 64000 \
         --concurrency 1 16 32 64
@@ -56,7 +56,7 @@ class States:
 
 def run_level(url, headers, states, n_tokens, conc, n_requests, seed):
     rng = random.Random(seed)
-    bodies = [{"model": "openjev-latest", "state": states.make(n_tokens, rng), "questions": QUESTIONS}
+    bodies = [{"model": "zeus-latest", "state": states.make(n_tokens, rng), "questions": QUESTIONS}
               for _ in range(n_requests)]
     state_tokens = statistics.mean(len(states.tok.encode(b["state"], add_special_tokens=False)) for b in bodies)
     lat, billed, errors = [], [], {}
@@ -90,8 +90,8 @@ def run_level(url, headers, states, n_tokens, conc, n_requests, seed):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--url", default="http://127.0.0.1:8080")
-    p.add_argument("--key", default=os.environ.get("OPENJEV_API_KEY"))
-    p.add_argument("--origin-secret", default=os.environ.get("OPENJEV_ORIGIN_SECRET"))
+    p.add_argument("--key", default=os.environ.get("ZEUS_API_KEY"))
+    p.add_argument("--origin-secret", default=os.environ.get("ZEUS_ORIGIN_SECRET"))
     p.add_argument("--tokenizer", default="nvidia/diffusiongemma-26B-A4B-it-NVFP4")
     p.add_argument("--state-tokens", type=int, nargs="+", default=[50, 8192, 32768, 64000])
     p.add_argument("--concurrency", type=int, nargs="+", default=[1, 16, 32, 64])

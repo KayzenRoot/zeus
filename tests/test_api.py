@@ -7,9 +7,9 @@ import pytest
 from fastapi.testclient import TestClient
 from transformers import AutoTokenizer
 
-from openjev.api import create_app
-from openjev.config import Settings
-from openjev.engine import MAX_LABEL_IDS, Engine, SchemaError, confidence, model_ns, to_answer
+from zeus.api import create_app
+from zeus.config import Settings
+from zeus.engine import MAX_LABEL_IDS, Engine, SchemaError, confidence, model_ns, to_answer
 
 TOKENIZER = "nvidia/diffusiongemma-26B-A4B-it-NVFP4"
 EXAMPLE = {  # Jev's quickstart request, verbatim
@@ -85,7 +85,7 @@ def test_widest_schema_fits_one_read_of_label_ids(tok):
 
 def test_constrained_reads_are_opt_in(tok):
     """diffusion_constrained changes what a slot's entropy measures, so it is sent
-    only when OPENJEV_CONSTRAINED asks for it."""
+    only when ZEUS_CONSTRAINED asks for it."""
     template, slots = [0] * 8, [{"pos": 2, "label_ids": [5, 6]}]
     assert "diffusion_constrained" not in Engine(Settings(), tok)._xargs(template, slots, 0, 1)
     xargs = Engine(Settings(constrained=True), tok)._xargs(template, slots, 0, 1)
@@ -128,7 +128,7 @@ def test_quickstart_decodes_with_typesafe_sdk(client):
 def test_models(client):
     r = client.get("/v1/models")
     assert r.status_code == 200
-    assert r.json()["models"][0]["name"] == "openjev-latest"
+    assert r.json()["models"][0]["name"] == "zeus-latest"
 
 
 def test_validation_shapes(client):
@@ -160,7 +160,7 @@ def test_non_ascii_credentials_are_rejected_not_crashed():
     latin-1 decoded: a credential with an accent in it was an unhandled 500."""
     from types import SimpleNamespace
 
-    from openjev.api import check_auth
+    from zeus.api import check_auth
 
     s = Settings(api_key="sk-test", origin_secret="s3")
     r = check_auth(s, SimpleNamespace(headers={"x-origin-secret": "s€", "authorization": "Bearer sk-test"}))
@@ -421,7 +421,7 @@ def test_deeply_nested_body_is_rejected_not_crashed(client):
 def test_invalid_requests_are_logged_without_their_body(client, caplog):
     import logging
 
-    with caplog.at_level(logging.WARNING, logger="openjev"):
+    with caplog.at_level(logging.WARNING, logger="zeus"):
         client.post("/v1/systemone", json=dict(EXAMPLE, questions={"q": {"type": "nope", "instructions": "x"}}))
         client.post("/v1/systemone", json=dict(EXAMPLE, questions={"q": {"type": "score", "instructions": "x", "criteria": [f"l{i}" for i in range(11)]}}))
     logged = [r.getMessage() for r in caplog.records]
@@ -476,7 +476,7 @@ def test_a_cancelled_wait_for_a_chat_slot_leaks_no_capacity():
     """stream() counted the request, then waited for a slot. A client that went
     away while waiting kept its count forever, and enough of them 529'd the
     server for good."""
-    from openjev.chat import Generator
+    from zeus.chat import Generator
 
     async def main():
         gen = Generator(Settings(gen_max_inflight=1))

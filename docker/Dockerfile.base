@@ -1,8 +1,8 @@
-# The base of all three OpenJev images: CUDA runtime, Python 3.12 and PyTorch.
-#   docker build -f docker/Dockerfile.base -t razorback16/openjev-base:cu130-torch2.13 .
+# The base of all three Zeus images: CUDA runtime, Python 3.12 and PyTorch.
+#   docker build -f docker/Dockerfile.base -t zeus-base:cu130-torch2.13 .
 # docker/Dockerfile (vLLM), Dockerfile.laya and Dockerfile.verdict start FROM it, so a
 # server that runs all three pulls and stores these layers (about 8.7 GB) once.
-# Tag it by what it holds, not by the OpenJev version: a new tag only when CUDA or torch moves.
+# Tag it by what it holds, not by the Zeus version: a new tag only when CUDA or torch moves.
 #
 # The CUDA base image carries only the driver shims. torch's wheel brings its own CUDA 13.0
 # libraries (kernels include sm_120, Blackwell) as nvidia-* packages.

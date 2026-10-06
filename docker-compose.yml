@@ -1,28 +1,28 @@
-# OpenJev: vLLM (DiffusionGemma structured reads) and the Jev-compatible API on :8080,
+# Zeus: vLLM (DiffusionGemma structured reads) and the Jev-compatible API on :8080,
 # in one container. Two small encoder models run beside it on the same GPU, each
-# in its own container; the openjev container passes their requests through, so
+# in its own container; the zeus container passes their requests through, so
 # :8080 serves all three models. CLM and JevK5 are opt-in: see the clm and jevk5 services.
 # Build docker/Dockerfile.base first: all the images start FROM it and share its layers.
 services:
-  openjev:
+  zeus:
     build: {context: ., dockerfile: docker/Dockerfile}
-    image: razorback16/openjev:0.6.0
+    image: zeus:0.1.0
     environment:
-      OPENJEV_CANVAS: "64"
-      OPENJEV_MAX_NUM_SEQS: ${OPENJEV_MAX_NUM_SEQS:-64}
-      OPENJEV_MAX_MODEL_LEN: ${OPENJEV_MAX_MODEL_LEN:-65536}
-      OPENJEV_GPU_UTIL: ${OPENJEV_GPU_UTIL:-0.9}
-      OPENJEV_API_KEY: ${OPENJEV_API_KEY:-}
-      OPENJEV_ORIGIN_SECRET: ${OPENJEV_ORIGIN_SECRET:-}
+      ZEUS_CANVAS: "64"
+      ZEUS_MAX_NUM_SEQS: ${ZEUS_MAX_NUM_SEQS:-64}
+      ZEUS_MAX_MODEL_LEN: ${ZEUS_MAX_MODEL_LEN:-65536}
+      ZEUS_GPU_UTIL: ${ZEUS_GPU_UTIL:-0.9}
+      ZEUS_API_KEY: ${ZEUS_API_KEY:-}
+      ZEUS_ORIGIN_SECRET: ${ZEUS_ORIGIN_SECRET:-}
       # with the clm or jevk5 profile, add clm-v0.1=http://clm:8080 or jevk5-0.2=http://jevk5:8080
-      OPENJEV_MODEL_ROUTES: ${OPENJEV_MODEL_ROUTES:-laya-1.0=http://laya:8080,verdict-1.4=http://verdict:8080}
+      ZEUS_MODEL_ROUTES: ${ZEUS_MODEL_ROUTES:-laya-1.0=http://laya:8080,verdict-1.4=http://verdict:8080}
       HF_TOKEN: ${HF_TOKEN:-}
     volumes:
       - ${HF_HOME:-~/.cache/huggingface}:/root/.cache/huggingface
       - vllm-cache:/root/.cache/vllm
       - flashinfer-cache:/root/.cache/flashinfer   # its NVFP4 MoE kernels, compiled on first start (about 4 min)
     ports:
-      - "${OPENJEV_BIND:-127.0.0.1}:8080:8080"
+      - "${ZEUS_BIND:-127.0.0.1}:8080:8080"
     ipc: host
     deploy: &gpu
       resources:
@@ -31,14 +31,14 @@ services:
     restart: unless-stopped
 
   # The encoder models take 2.5 GB (Laya) and 1.2 GB (Verdict) of GPU memory, measured at a full batch.
-  # Lower OPENJEV_GPU_UTIL to leave vLLM's neighbours that much room.
+  # Lower ZEUS_GPU_UTIL to leave vLLM's neighbours that much room.
   laya:
     build: {context: ., dockerfile: docker/Dockerfile.laya}
-    image: razorback16/openjev-laya:0.5.0
+    image: zeus-laya:0.1.0
     environment: &encoder-env
-      # the openjev container forwards the caller's key and origin secret, so these match it
-      OPENJEV_API_KEY: ${OPENJEV_API_KEY:-}
-      OPENJEV_ORIGIN_SECRET: ${OPENJEV_ORIGIN_SECRET:-}
+      # the zeus container forwards the caller's key and origin secret, so these match it
+      ZEUS_API_KEY: ${ZEUS_API_KEY:-}
+      ZEUS_ORIGIN_SECRET: ${ZEUS_ORIGIN_SECRET:-}
       PYTORCH_CUDA_ALLOC_CONF: expandable_segments:True
       HF_TOKEN: ${HF_TOKEN:-}
     volumes: &hf
@@ -48,22 +48,22 @@ services:
 
   verdict:
     build: {context: ., dockerfile: docker/Dockerfile.verdict}
-    image: razorback16/openjev-verdict:0.5.0
+    image: zeus-verdict:0.1.0
     environment: *encoder-env
     volumes: *hf
     deploy: *gpu
     restart: unless-stopped
 
   # CLM runs its own vLLM (Qwen3-8B-FP8, about 9 GB of weights), so it needs about 12 GB
-  # beside DiffusionGemma: start it with --profile clm, lower OPENJEV_GPU_UTIL for openjev,
-  # and add it to OPENJEV_MODEL_ROUTES.
+  # beside DiffusionGemma: start it with --profile clm, lower ZEUS_GPU_UTIL for zeus,
+  # and add it to ZEUS_MODEL_ROUTES.
   clm:
     build: {context: ., dockerfile: docker/Dockerfile.clm}
-    image: razorback16/openjev-clm:0.5.0
+    image: zeus-clm:0.1.0
     profiles: [clm]
     environment:
       <<: *encoder-env
-      OPENJEV_GPU_UTIL: ${OPENJEV_CLM_GPU_UTIL:-0.12}
+      ZEUS_GPU_UTIL: ${ZEUS_CLM_GPU_UTIL:-0.12}
     volumes:
       - ${HF_HOME:-~/.cache/huggingface}:/root/.cache/huggingface
       - vllm-cache:/root/.cache/vllm
@@ -72,14 +72,14 @@ services:
     restart: unless-stopped
 
   # JevK5 runs its own vLLM too (bf16, 8.4 GB of weights): start it with --profile jevk5 and add
-  # jevk5-0.2=http://jevk5:8080 to OPENJEV_MODEL_ROUTES, leaving it room as for CLM.
+  # jevk5-0.2=http://jevk5:8080 to ZEUS_MODEL_ROUTES, leaving it room as for CLM.
   jevk5:
     build: {context: ., dockerfile: docker/Dockerfile.jevk5}
-    image: razorback16/openjev-jevk5:0.5.0
+    image: zeus-jevk5:0.1.0
     profiles: [jevk5]
     environment:
       <<: *encoder-env
-      OPENJEV_GPU_UTIL: ${OPENJEV_JEVK5_GPU_UTIL:-0.12}
+      ZEUS_GPU_UTIL: ${ZEUS_JEVK5_GPU_UTIL:-0.12}
     volumes:
       - ${HF_HOME:-~/.cache/huggingface}:/root/.cache/huggingface
       - vllm-cache:/root/.cache/vllm

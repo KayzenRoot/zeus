@@ -1,0 +1,58 @@
+name: Zeus CI
+
+on:
+  push:
+    branches:
+      - main
+      - identity/ZEUS-ID-WO-001
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Zeus test dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[test]'
+
+      - name: Import and package identity smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import zeus
+          assert zeus.__version__ == "0.1.0", zeus.__version__
+          print("Zeus", zeus.__version__)
+          PY
+          python -m compileall -q zeus
+
+      - name: Unit and API tests
+        run: pytest -q
+
+      - name: Docker Compose config
+        run: docker compose config >/dev/null
+
+      - name: Active legacy identity scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -n -i -E 'openjev|OPENJEV' --             ':!/.engineering/upstream/**'             ':!/.engineering/evidence/ZEUS-BOOT-WO-001-EVIDENCE.md'             ':!/.engineering/work-orders/ZEUS-BOOT-WO-001.md'             ':!/.engineering/context-locks/ZEUS-BOOT-WO-001.json'             ':!/.engineering/work-orders/ZEUS-ID-WO-001.md'             ':!/.engineering/context-locks/ZEUS-ID-WO-001.json'             ':!/.engineering/evidence/ZEUS-ID-WO-001-EVIDENCE.md'; then
+            echo "Active legacy identity reference detected."
+            exit 1
+          fi
+
+      - name: Secret-pattern guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! git grep -n -E '(sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|Bearer[[:space:]]+[A-Za-z0-9._-]{20,})' -- ':!/.git/**'

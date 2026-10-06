@@ -367,7 +367,7 @@ class Engine:
             field = "think" if opts["think"] else "sequential"
             raise SchemaError(f"{field} needs a text state; send images without it", ("body", field))
         if self.waiting >= self.s.max_queue:
-            raise Overloaded("OpenJev is at capacity. Retry shortly.")
+            raise Overloaded("Zeus is at capacity. Retry shortly.")
         self.waiting += 1
         try:
             schema = self.build_schema(questions)
