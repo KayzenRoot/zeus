@@ -1,0 +1,37 @@
+name: Sonar Diagnostics
+
+on:
+  push:
+    branches:
+      - identity/ZEUS-ID-WO-001
+
+permissions:
+  contents: read
+
+jobs:
+  sonar-findings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch PR 7 Sonar issues
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://sonarcloud.io/api/issues/search?componentKeys=KayzenRoot_zeus&pullRequest=7&issueStatuses=OPEN,CONFIRMED&ps=100'
+          curl --fail --silent --show-error "$URL" -o sonar.json
+          python - <<'PY'
+          import json
+          data=json.load(open("sonar.json"))
+          print("total", data.get("total"))
+          for i in data.get("issues", []):
+              print(json.dumps({
+                  "key": i.get("key"),
+                  "rule": i.get("rule"),
+                  "severity": i.get("severity"),
+                  "type": i.get("type"),
+                  "cleanCodeAttribute": i.get("cleanCodeAttribute"),
+                  "component": i.get("component"),
+                  "line": i.get("line"),
+                  "message": i.get("message"),
+                  "impacts": i.get("impacts"),
+              }, ensure_ascii=False))
+          PY
