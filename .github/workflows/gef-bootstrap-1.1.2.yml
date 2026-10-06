@@ -1,0 +1,77 @@
+name: GEF Bootstrap 1.1.2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gef-bootstrap-1.1.2.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gef-bootstrap-zeus
+  cancel-in-progress: false
+
+jobs:
+  install-and-verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact triggering head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install exact GEF dependency
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Verify exact GEF version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(./node_modules/.bin/gef --version | tr -d '\r\n')"
+          echo "GEF version output: $VERSION"
+          [[ "$VERSION" == *"1.1.2"* ]]
+
+      - name: Read-only GEF init plan
+        run: ./node_modules/.bin/gef init --target "$GITHUB_WORKSPACE" --json
+
+      - name: Apply governed GEF initialization
+        run: ./node_modules/.bin/gef init --apply --target "$GITHUB_WORKSPACE" --json
+
+      - name: GEF doctor
+        run: ./node_modules/.bin/gef doctor --target "$GITHUB_WORKSPACE" --json
+
+      - name: GEF status
+        run: ./node_modules/.bin/gef status --target "$GITHUB_WORKSPACE" --json
+
+      - name: Verify generated governed state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .gef/init-state.json
+          test -d .gef/receipts
+          test "$(find .gef/receipts -maxdepth 1 -type f -name '*.json' | wc -l)" -ge 1
+          node -e 'const fs=require("fs"); const s=JSON.parse(fs.readFileSync(".gef/init-state.json","utf8")); if(s.productVersion!=="1.1.2"||s.kind!=="gef.init.state") process.exit(1); console.log(JSON.stringify({kind:s.kind,productVersion:s.productVersion,runId:s.runId},null,2));'
+
+      - name: Persist GEF state and lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json .gef
+          if git diff --cached --quiet; then
+            echo "No bootstrap delta to commit."
+            exit 0
+          fi
+          git commit -m "chore(gef): initialize governed state with GEF 1.1.2"
+          git push origin HEAD:main
