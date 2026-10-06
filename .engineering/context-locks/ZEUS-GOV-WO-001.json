@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "zeus.context-lock",
+  "workOrder": "ZEUS-GOV-WO-001",
+  "base": "bb3643cdf29c1c8c46deae64a7159c98a1d1daee",
+  "lockedSources": {
+    "checkpoint": "40c82fa3ef9c2a7c8a8a66878acee818efc24611",
+    "gefState": "026b54e0621f9dc3e651de5bc8f0548b835aa2e9"
+  },
+  "ownerDecision": "TEMPORARY_PUBLIC_REPOSITORY_ALLOWED_FOR_CI",
+  "status": "LOCKED"
+}

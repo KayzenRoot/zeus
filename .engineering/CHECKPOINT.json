@@ -15,15 +15,20 @@
     "mismatches": 0,
     "status": "VERIFIED"
   },
-  "bootstrapWorkOrder": {
-    "id": "ZEUS-BOOT-WO-001",
-    "status": "APPROVED_MERGED",
-    "pr": 2,
-    "mergeCommit": "f82b237afc53ebf37437894ac03c29cc77fdfd9d"
+  "sourcePack": {
+    "status": "ESTABLISHED",
+    "workOrder": "ZEUS-GOV-WO-001"
   },
-  "productPlanning": "NOT_STARTED",
+  "decisions": [
+    "ZD-0001",
+    "ZD-0002",
+    "ZD-0003",
+    "ZD-0004",
+    "ZD-0005"
+  ],
+  "repositoryVisibility": "PUBLIC_AUTHORIZED_TEMPORARILY_FOR_CI",
+  "secretsPolicy": "FORBIDDEN_IN_REPOSITORY",
   "implementation": "NOT_STARTED",
-  "repositoryVisibility": "PUBLIC",
-  "blocker": "PROPRIETARY_PLANNING_REQUIRES_PRIVATE_REPOSITORY",
-  "nextLegalAction": "MAKE_REPOSITORY_PRIVATE_THEN_CREATE_SOURCE_PACK"
+  "nextLegalAction": "ZEUS-ID-WO-001",
+  "stopCondition": "IDENTITY_ONLY_NO_FEATURE_EXPANSION"
 }
