@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "zeus.context-lock",
+  "workOrder": "ZEUS-ID-WO-001",
+  "base": "79d1405582fb045b3dcdfbf06bc385269d891874",
+  "sources": {
+    "checkpoint": "6fd81b0b65e60472ed84512b96c7ce3f54c86534",
+    "decisions": "0bf8026312578b10f91c8cab8e8b22c211994313",
+    "scope": "cba401eef09ce556f3351e11120217f23517eb8e",
+    "dod": "45a6cde1897f187631ba4a8b46015e09cbfc7eb5",
+    "architecture": "f11fa4a492354a01deed486b396a9ee32e0b122f",
+    "requirements": "07a9023834b4549932ca3c46569066fff3a236bf"
+  },
+  "constraints": [
+    "IDENTITY_CHANGE_ALLOWED",
+    "NO_ALGORITHM_CHANGE",
+    "NO_SECRET_COMMIT",
+    "HISTORICAL_EVIDENCE_IMMUTABLE"
+  ],
+  "status": "LOCKED"
+}
