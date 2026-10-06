@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "zeus.context-lock",
+  "workOrder": "ZEUS-BOOT-WO-001",
+  "zeusBase": "525744a8ff3a42eddd1993436fd3b9496fa268c5",
+  "upstreamRepository": "razorback16/openjev",
+  "upstreamCommit": "75f22b6dad8c360fdba0e0ebd3dc0a1187628f60",
+  "upstreamBlobCount": 31,
+  "acceptance": "ALL_BLOB_SHA_EQUAL",
+  "status": "LOCKED"
+}
