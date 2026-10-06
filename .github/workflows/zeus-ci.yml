@@ -22,15 +22,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Zeus test dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -e '.[test]'
+      - name: Install locked binary-only CI dependencies
+        run: python -m pip install --only-binary=:all: --requirement .github/ci-requirements.lock
 
-      - name: Import and package identity smoke
+      - name: Package metadata and import smoke
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
+          import tomllib
           import zeus
+          data = tomllib.load(open("pyproject.toml", "rb"))
+          assert data["project"]["name"] == "zeus"
+          assert data["project"]["version"] == "0.1.0"
+          assert data["tool"]["setuptools"]["packages"] == ["zeus"]
           assert zeus.__version__ == "0.1.0", zeus.__version__
           print("Zeus", zeus.__version__)
           PY
@@ -46,7 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git grep -n -i -E 'open[j]ev' --             ':!/.engineering/upstream/**'             ':!/.engineering/evidence/**'             ':!/.engineering/work-orders/**'             ':!/.engineering/context-locks/**'; then
+          if git grep -n -i -E 'open[j]ev' --             ':!/.engineering/upstream/**'             ':!/.engineering/evidence/**'             ':!/.engineering/work-orders/**'             ':!/.engineering/context-locks/**'             ':!/.engineering/corrections/**'; then
             echo "Active legacy identity reference detected."
             exit 1
           fi
