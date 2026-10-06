@@ -42,7 +42,7 @@ jobs:
           python -m compileall -q zeus
 
       - name: Unit and API tests
-        run: pytest -q
+        run: python -m pytest -q
 
       - name: Docker Compose config
         run: docker compose config >/dev/null
